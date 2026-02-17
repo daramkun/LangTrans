@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LangTrans Admin - {% block title %}{% endblock %}</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f5f5f5; color: #333; }
+        .container { max-width: 900px; margin: 40px auto; padding: 0 20px; }
+        h1 { margin-bottom: 20px; }
+        h2 { margin: 24px 0 12px; }
+        .error { background: #fee; color: #c00; padding: 10px; border-radius: 4px; margin-bottom: 16px; }
+        .success { background: #efe; color: #060; padding: 10px; border-radius: 4px; margin-bottom: 16px; }
+        form label { display: block; margin: 8px 0 4px; font-weight: 600; }
+        input[type="text"], input[type="password"], input[type="datetime-local"] {
+            width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 8px;
+        }
+        button { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; background: #007bff; color: #fff; }
+        button:hover { background: #0056b3; }
+        button.danger { background: #dc3545; }
+        button.danger:hover { background: #a71d2a; }
+        table { width: 100%; border-collapse: collapse; margin-top: 12px; background: #fff; }
+        th, td { padding: 10px 12px; border: 1px solid #ddd; text-align: left; font-size: 14px; }
+        th { background: #f0f0f0; }
+        code { font-size: 12px; word-break: break-all; }
+        .topbar { display: flex; justify-content: space-between; align-items: center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>

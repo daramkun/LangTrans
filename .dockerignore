@@ -1,0 +1,8 @@
+target/
+onnx-model/
+api_keys.json
+.git/
+.gitignore
+*.md
+Dockerfile
+.dockerignore

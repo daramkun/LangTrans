@@ -1,0 +1,25 @@
+services:
+  langtrans:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      LANGTRANS_ADMIN_ID: ${LANGTRANS_ADMIN_ID:-admin}
+      LANGTRANS_ADMIN_PASSWORD: ${LANGTRANS_ADMIN_PASSWORD:-changeme}
+      LANGTRANS_PORT: "8080"
+      RUST_LOG: info
+    volumes:
+      # Mount ONNX model directory (must be prepared beforehand)
+      - ./onnx-model:/app/onnx-model:ro
+      # Persistent data for API keys
+      - langtrans-data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/admin/login"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+
+volumes:
+  langtrans-data:

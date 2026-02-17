@@ -1,0 +1,57 @@
+{% extends "base.html" %} {% block title %}Dashboard{% endblock %} {% block
+content %}
+<div class="topbar">
+    <h1>API Key Management</h1>
+    <form method="POST" action="/admin/logout">
+        <button type="submit">Logout</button>
+    </form>
+</div>
+{% match message %}{% when Some with (msg) %}
+<div class="success">{{ msg }}</div>
+{% when None %}{% endmatch %}
+<h2>Add New Key</h2>
+<form method="POST" action="/admin/keys">
+    <label>Label</label>
+    <input type="text" name="label" required />
+    <label>Expires (optional)</label>
+    <input type="datetime-local" name="expires_at" />
+    <button type="submit">Create</button>
+</form>
+<h2>Existing Keys</h2>
+<table>
+    <tr>
+        <th>Key</th>
+        <th>Label</th>
+        <th>Created</th>
+        <th>Expires</th>
+        <th>Status</th>
+        <th>Action</th>
+    </tr>
+    {% for key in keys %}
+    <tr>
+        <td><code>{{ key.key }}</code></td>
+        <td>{{ key.label }}</td>
+        <td>{{ key.created_at.format("%Y-%m-%d %H:%M") }}</td>
+        <td>
+            {% match key.expires_at %}{% when Some with (exp) %}{{
+            exp.format("%Y-%m-%d %H:%M") }}{% when None %}Never{% endmatch %}
+        </td>
+        <td>
+            {% if key.revoked %}Revoked{% else if key.is_expired() %}Expired{%
+            else %}Active{% endif %}
+        </td>
+        <td>
+            {% if !key.revoked && !key.is_expired() %}
+            <form
+                method="POST"
+                action="/admin/keys/{{ key.key }}/revoke"
+                style="display: inline"
+            >
+                <button type="submit" class="danger">Revoke</button>
+            </form>
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends "base.html" %} {% block title %}Login{% endblock %} {% block content
+%}
+<h1>LangTrans Admin</h1>
+{% match error %}{% when Some with (msg) %}
+<div class="error">{{ msg }}</div>
+{% when None %}{% endmatch %}
+<form method="POST" action="/admin/login">
+    <label>Username</label>
+    <input type="text" name="username" required />
+    <label>Password</label>
+    <input type="password" name="password" required />
+    <button type="submit">Login</button>
+</form>
+{% endblock %}
