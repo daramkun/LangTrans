@@ -10,11 +10,6 @@ tokio = { version = "1", features = ["full"] }
 tower = "0.5"
 tower-http = { version = "0.6", features = ["cors", "trace"] }
 
-# ONNX Runtime inference
-ort = { version = "2.0.0-rc.11", features = ["half"] }
-ndarray = "0.16"
-half = "2.4"
-
 # Tokenizer
 tokenizers = { version = "0.21", features = ["http"] }
 
@@ -33,3 +28,15 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 anyhow = "1"
 tempfile = "3.25.0"
+glob = "0.3"
+hf-hub = { version = "0.4", features = ["tokio"] }
+
+# Candle ML framework for inference
+candle-core = "0.9"
+candle-nn = "0.9"
+candle-transformers = "0.9"
+
+[features]
+cuda  = ["candle-core/cuda",  "candle-nn/cuda",  "candle-transformers/cuda"]
+metal = ["candle-core/metal", "candle-nn/metal", "candle-transformers/metal"]
+rocm  = []  # candle ROCm 미지원으로 현재는 CPU fallback (추후 candle ROCm 지원 시 구현 예정)

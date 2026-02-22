@@ -27,11 +27,6 @@ COPY templates ./templates
 # Build actual binary
 RUN cargo build --release
 
-# Collect ONNX Runtime shared library to a known path for copying
-RUN mkdir /build/ort-libs && \
-    find /build/target -name "libonnxruntime*.so*" ! -name "*.gz" \
-    -exec cp {} /build/ort-libs/ \;
-
 # Runtime stage
 FROM debian:bookworm-slim
 
@@ -48,16 +43,12 @@ RUN apt-get update && apt-get install -y \
 # Copy binary from builder
 COPY --from=builder /build/target/release/LangTrans /app/langtrans
 
-# Copy ONNX Runtime shared library and register it
-COPY --from=builder /build/ort-libs/ /usr/lib/
-RUN ldconfig
-
 # Create directories for data
-RUN mkdir -p /app/onnx-model /app/data
+RUN mkdir -p /app/model /app/data
 
 # Default environment variables
 ENV LANGTRANS_PORT=8080 \
-    LANGTRANS_MODEL_PATH=/app/onnx-model \
+    LANGTRANS_MODEL_PATH=/app/model \
     LANGTRANS_APIKEYS_PATH=/app/data/api_keys.json \
     RUST_LOG=info
 

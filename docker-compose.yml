@@ -9,8 +9,8 @@ services:
       LANGTRANS_PORT: "8080"
       RUST_LOG: info
     volumes:
-      # Mount ONNX model directory (must be prepared beforehand)
-      - ./onnx-model:/app/onnx-model:ro
+      # Mount model directory with safetensors (must be prepared beforehand)
+      - ./model:/app/model:ro
       # Persistent data for API keys
       - langtrans-data:/app/data
     restart: unless-stopped

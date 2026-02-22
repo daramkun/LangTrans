@@ -1,5 +1,5 @@
 /target
-/onnx-model
+/model
 api_keys.json
 .env
 /.claude

@@ -6,6 +6,7 @@ pub struct Config {
     pub model_path: PathBuf,
     pub api_keys_path: PathBuf,
     pub admin: AdminConfig,
+    pub model_id: String,
 }
 
 #[derive(Clone)]
@@ -29,12 +30,14 @@ impl Config {
             },
             model_path: PathBuf::from(
                 std::env::var("LANGTRANS_MODEL_PATH")
-                    .unwrap_or_else(|_| "./onnx-model".to_string()),
+                    .unwrap_or_else(|_| "./model".to_string()),
             ),
             api_keys_path: PathBuf::from(
                 std::env::var("LANGTRANS_APIKEYS_PATH")
                     .unwrap_or_else(|_| "./api_keys.json".to_string()),
             ),
+            model_id: std::env::var("LANGTRANS_MODEL_ID")
+                .unwrap_or_else(|_| "Qwen/Qwen2.5-0.5B-Instruct".to_string()),
             admin: AdminConfig {
                 username: admin_id,
                 password: admin_password,

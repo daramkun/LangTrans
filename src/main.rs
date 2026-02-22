@@ -29,7 +29,8 @@ async fn main() -> anyhow::Result<()> {
 
     let config = Config::from_env()?;
 
-    let inference = Arc::new(InferenceEngine::new(&config.model_path)?);
+    tracing::info!("Loading model: {}", config.model_id);
+    let inference = Arc::new(InferenceEngine::new(&config.model_id, &config.model_path).await?);
     let api_keys = ApiKeyStore::load_or_create(&config.api_keys_path)?;
 
     let state = Arc::new(AppState {

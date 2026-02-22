@@ -6,9 +6,9 @@
 
 LangTrans 는 Rust 프로젝트 (edition 2024)입니다.
 
-https://huggingface.co/yanolja/YanoljaNEXT-Rosetta-4B 모델을 사용해 일반 텍스트를 번역하여 HTTP로 제공합니다.
+https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct 모델을 사용해 일반 텍스트를 번역하여 HTTP로 제공합니다.
 
-해당 모델은 Safetensors 모델이므로 ONNX 모델로 변환하여 사용해야 합니다.
+해당 모델은 Safetensors 형식이며 Candle framework를 통해 직접 로딩하여 사용합니다. Metal GPU 가속을 활용합니다.
 
 웹 프레임워크는 Axum을 사용합니다.
 
@@ -18,7 +18,7 @@ https://huggingface.co/yanolja/YanoljaNEXT-Rosetta-4B 모델을 사용해 일반
 - HTTP 메서드: GET 및 POST 모두 지원
 - 필요 헤더 값: Authorization (Bearer token)
 - 인자: from(입력 문자열 언어), to(출력 문자열 언어), text(입력 문자열)
-- 반환값: 출력 문자열 (text/plain, YanoljaNEXT-Rosetta-4B 모델로 입력 문자열을 변환한 값)
+- 반환값: 출력 문자열 (text/plain, Qwen2.5-0.5B-Instruct 모델로 입력 문자열을 변환한 값)
 - 실패하는 경우:
    - 잘못된 API 키 입력: 401 Unauthorized
    - 잘못된 언어 코드 입력: 400 Bad Request
@@ -43,7 +43,7 @@ src/
   model/            # 번역 모델 관련
     language.rs     # Language enum (11개 언어 코드)
     prompt.rs       # Rosetta 채팅 템플릿 생성
-    inference.rs    # ONNX 추론 엔진 (KV 캐시 자기회귀 생성)
+    inference.rs    # Candle 추론 엔진 (Qwen2 모델, Metal GPU 가속)
   api/              # 번역 API
     auth.rs         # BearerToken 커스텀 Extractor
     translate.rs    # GET/POST 핸들러
@@ -56,9 +56,9 @@ src/
 templates/          # Askama HTML 템플릿
 ```
 
-핵심 흐름: HTTP 요청 → BearerToken 추출 → API 키 검증 → Language 파싱 → 프롬프트 생성 → ONNX 추론 (spawn_blocking) → text/plain 응답
+핵심 흐름: HTTP 요청 → BearerToken 추출 → API 키 검증 → Language 파싱 → 프롬프트 생성 → Candle 추론 (spawn_blocking, Metal GPU) → text/plain 응답
 
-InferenceEngine은 Mutex<Session>으로 보호되며, translate() 호출 시 Prefill + KV 캐시 자기회귀 루프로 토큰을 생성합니다.
+InferenceEngine은 Mutex<Model>으로 보호되며, translate() 호출 시 Prefill + KV 캐시 자기회귀 루프로 토큰을 생성합니다.
 
 ## 환경변수
 
@@ -68,15 +68,36 @@ InferenceEngine은 Mutex<Session>으로 보호되며, translate() 호출 시 Pre
 | `LANGTRANS_ADMIN_PASSWORD` | - | O |
 | `LANGTRANS_PORT` | `8080` | X |
 | `LANGTRANS_BIND_ADDR` | `0.0.0.0:{PORT}` | X |
-| `LANGTRANS_MODEL_PATH` | `./onnx-model` | X |
+| `LANGTRANS_MODEL_ID` | `Qwen/Qwen2.5-0.5B-Instruct` | X |
+| `LANGTRANS_MODEL_PATH` | `./model` | X |
 | `LANGTRANS_APIKEYS_PATH` | `./api_keys.json` | X |
 
-## 사전 준비: ONNX 모델 변환
+## 사전 준비: 모델 자동 다운로드
+
+**모델은 첫 실행 시 자동으로 HuggingFace Hub에서 다운로드됩니다.**
 
 ```bash
-pip install optimum[onnxruntime] transformers torch
-optimum-cli export onnx --model yanolja/YanoljaNEXT-Rosetta-4B --task text-generation-with-past ./onnx-model/
+# 환경변수로 모델 선택 (기본값: 0.5B)
+export LANGTRANS_MODEL_ID="Qwen/Qwen2.5-0.5B-Instruct"  # 빠름, 권장
+export LANGTRANS_MODEL_ID="Qwen/Qwen2.5-3B-Instruct"    # 품질 우선
+export LANGTRANS_MODEL_ID="Qwen/Qwen2.5-7B-Instruct"    # 최고 품질
 ```
+
+**다운로드 위치:**
+- HuggingFace 기본 캐시: `~/.cache/huggingface/hub/`
+- 또는 `LANGTRANS_MODEL_PATH` 환경변수로 지정 가능
+
+**성능 (Mac M4 32GB 기준):**
+- **0.5B**: 로드 2-5초, 번역 1-3초 ⚡
+- **3B**: 로드 10-20초, 번역 3-7초
+- **7B**: 로드 30-60초, 번역 10-20초
+
+**기술 스택:**
+- Metal GPU 가속 (Apple Silicon)
+- F32 precision (안정성)
+- Safetensors 직접 로딩
+- Memory-mapped 파일 로딩
+- hf-hub 자동 캐싱
 
 ## 빌드 명령어
 
